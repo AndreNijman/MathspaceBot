@@ -1,6 +1,6 @@
-# MathspaceBot
+# MathspaceBot (Paused / Not Currently Working)
 
-Automates Mathspace question workflows with Puppeteer while delegating answer generation to OpenAI's GPT models. Inspired by the EducationPerfectedAgain architecture but rewritten in TypeScript with a modular structure and floating control panel injected into Mathspace sessions.
+This project is on hold and **does not function in its current state**. The documentation below reflects the intended design, but the bot requires further work before it can be used again.
 
 ## Features
 - Opens Mathspace in Chromium and lets you log in manually.
