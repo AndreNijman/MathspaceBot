@@ -1,5 +1,4 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
-import { config } from '../util/config.js';
 import { logger } from '../util/log.js';
 
 export interface BrowserSession {
@@ -7,7 +6,7 @@ export interface BrowserSession {
   page: Page;
 }
 
-const LOGIN_URL = 'https://mathspace.co/login';
+const MATHSPACE_URL = 'https://mathspace.co/login';
 
 export async function bootstrapBrowser(): Promise<BrowserSession> {
   const browser = await puppeteer.launch({
@@ -16,17 +15,8 @@ export async function bootstrapBrowser(): Promise<BrowserSession> {
   });
 
   const page = await browser.newPage();
-  await page.goto(LOGIN_URL, { waitUntil: 'networkidle2' });
-  await performLogin(page);
+  await page.goto(MATHSPACE_URL, { waitUntil: 'networkidle2' });
+  logger.info('Please log in to Mathspace manually, then open the desired task.');
 
-  logger.info('Logged into Mathspace');
   return { browser, page };
-}
-
-async function performLogin(page: Page): Promise<void> {
-  await page.waitForSelector('input[type="email"]', { timeout: 20000 });
-  await page.type('input[type="email"]', config.mathspaceEmail, { delay: 25 });
-  await page.type('input[type="password"]', config.mathspacePassword, { delay: 25 });
-  await page.click('button[type="submit"]');
-  await page.waitForNavigation({ waitUntil: 'networkidle2' });
 }

@@ -3,7 +3,7 @@
 Automates Mathspace question workflows with Puppeteer while delegating answer generation to OpenAI's GPT models. Inspired by the EducationPerfectedAgain architecture but rewritten in TypeScript with a modular structure and floating control panel injected into Mathspace sessions.
 
 ## Features
-- Logs into Mathspace automatically (credentials pulled from `.env`).
+- Opens Mathspace in Chromium and lets you log in manually.
 - Injects a draggable overlay with status, counters, and mode selection.
 - Three answer modes:
   - **Instant** – auto-fill and submit immediately.
@@ -24,10 +24,8 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
    ```bash
    npm install
    ```
-2. Copy `.env.example` to `.env` and fill in your credentials:
+2. Copy `.env.example` to `.env` and add your OpenAI credentials:
    ```env
-   MATHSPACE_EMAIL=you@example.com
-   MATHSPACE_PASSWORD=s3cr3t
    OPENAI_API_KEY=sk-...
    OPENAI_MODEL=gpt-5      # optional override
    ```
@@ -38,8 +36,8 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
    The same compiled output can be launched later with `npm start`.
 
 ## Usage Flow
-1. A Chromium window opens and logs into Mathspace using the provided credentials.
-2. Navigate to a task. Once the workspace is detected, the control panel appears.
+1. A Chromium window opens on the Mathspace login page.
+2. Log in manually, navigate to the task you want to automate, and wait for the overlay to appear once the workspace loads.
 3. Use the overlay buttons or keyboard shortcuts:
    - `Alt+S` – toggle start/stop.
    - `Alt+R` – refresh question context.
