@@ -32,8 +32,18 @@ async function main(): Promise<void> {
     void panelApi.updatePanel(snapshot);
   });
 
-  await page.waitForSelector('body', { timeout: 15000 }).catch(() => undefined);
-  await injectPanel(page, state.snapshot());
+  const ensurePanel = async (): Promise<void> => {
+    try {
+      await injectPanel(page, state.snapshot());
+    } catch (error) {
+      logger.warn('Panel injection failed', { error });
+    }
+  };
+
+  await ensurePanel();
+  page.on('load', () => {
+    void ensurePanel();
+  });
 
   process.on('SIGINT', async () => {
     logger.warn('Received SIGINT, shutting down');
