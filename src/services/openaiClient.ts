@@ -27,7 +27,7 @@ export class OpenAIClient {
         model: this.model,
         messages,
         temperature: options.temperature ?? 0.2,
-        max_tokens: options.maxTokens ?? 512
+        max_completion_tokens: options.maxTokens ?? 512
       })
     });
 
