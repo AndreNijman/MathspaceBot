@@ -2,9 +2,9 @@ import { Page } from 'puppeteer';
 import { logger } from '../util/log.js';
 
 const SELECTORS = {
-  answerInput: 'input[data-testid="answer-input"], .answer-input input',
-  multipleChoiceOption: '[data-testid="choice"], .multiple-choice-option',
-  submitButton: 'button[data-testid="submit"], button.submit',
+  mathTextarea: '.mq-editable-field .mq-textarea textarea, [class*="primaryLatexInput"] .mq-textarea textarea',
+  multipleChoiceOption: '[role="radiogroup"] [role="radio"], [class*="multipleChoiceOption"], button[role="radio"]',
+  submitButton: 'button[data-testid="submit"], button.submit, button[aria-label="Check"]',
   nextButton: '[data-testid="next-btn"], button.next-question'
 };
 
@@ -15,7 +15,7 @@ export class MathspaceDomWriter {
     logger.debug('Filling answer', { answerSnippet: answer.slice(0, 40) });
     await this.page.evaluate(
       async (selectors, value) => {
-        const input = document.querySelector<HTMLInputElement>(selectors.answerInput);
+        const input = document.querySelector<HTMLTextAreaElement>(selectors.mathTextarea);
         if (input) {
           input.focus();
           input.value = '';
@@ -23,11 +23,16 @@ export class MathspaceDomWriter {
           await new Promise((resolve) => setTimeout(resolve, 30));
           input.value = value;
           input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter' }));
           return;
         }
-        const options = Array.from(document.querySelectorAll<HTMLButtonElement>(selectors.multipleChoiceOption));
-        const target = options.find((option) => option.textContent?.trim().toLowerCase() === value.trim().toLowerCase());
-        target?.click();
+        const options = Array.from(document.querySelectorAll<HTMLElement>(selectors.multipleChoiceOption));
+        const normalized = value.trim().toLowerCase();
+        const target = options.find((option) => option.textContent?.trim().toLowerCase() === normalized);
+        if (target) {
+          target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
       },
       SELECTORS,
       answer

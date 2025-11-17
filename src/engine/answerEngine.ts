@@ -27,10 +27,12 @@ export class AnswerEngine {
     if (this.loopInFlight) {
       this.options.state.setRunning(true);
       this.stopRequested = false;
+      this.updateActivity('Waiting for the next question...');
       return;
     }
     this.stopRequested = false;
     this.options.state.setRunning(true);
+    this.updateActivity('Waiting for the next question...');
     this.loopInFlight = true;
     void this.runLoop();
   }
@@ -38,13 +40,22 @@ export class AnswerEngine {
   async stop(): Promise<void> {
     this.stopRequested = true;
     this.options.state.setRunning(false);
+    this.updateActivity('Stopped');
   }
 
   async refreshQuestion(): Promise<void> {
+    this.updateActivity('Refreshing question context...');
     const context = await this.options.reader.readQuestionContext();
     if (context) {
       logger.info('Question refreshed', { snippet: context.questionText.slice(0, 60) });
+      this.updateActivity('Question refreshed; awaiting action...');
+    } else {
+      this.updateActivity('No question detected yet...');
     }
+  }
+
+  private updateActivity(message: string): void {
+    this.options.state.setActivity(message);
   }
 
   private async runLoop(): Promise<void> {
@@ -56,6 +67,7 @@ export class AnswerEngine {
         logger.error('Processing question failed', { message });
         this.options.state.setError(message);
         this.options.state.recordRetry();
+        this.updateActivity('Encountered an error, retrying shortly...');
         await this.sleep(2000);
       }
       await this.sleep(250);
@@ -64,8 +76,10 @@ export class AnswerEngine {
   }
 
   private async processQuestion(): Promise<void> {
+    this.updateActivity('Scanning for question content...');
     const context = await this.options.reader.readQuestionContext();
     if (!context) {
+      this.updateActivity('Waiting for Mathspace to display the next question...');
       await this.sleep(750);
       return;
     }
@@ -73,9 +87,11 @@ export class AnswerEngine {
     const cachedAnswer = this.options.state.recallAnswer(context);
     const answer = cachedAnswer ?? (await this.generateAnswer(context));
     await this.options.writer.fillAnswer(answer.raw);
+    this.updateActivity('Answer populated; awaiting submission...');
 
     const behavior = resolveModeBehavior(this.options.state.snapshot().mode);
     if (behavior.shouldAutoSubmit) {
+      this.updateActivity('Submitting answer...');
       const delay = randomDelay(behavior);
       if (delay > 0) {
         await this.sleep(delay);
@@ -83,6 +99,9 @@ export class AnswerEngine {
       await this.options.writer.submit();
     }
 
+    this.updateActivity(
+      behavior.shouldAutoSubmit ? 'Waiting for feedback...' : 'Waiting for you to submit the answer...'
+    );
     const feedback = await this.waitForFeedback(behavior.shouldAutoSubmit ? 8000 : 120000);
     if (feedback) {
       this.options.state.recordAnswerResult(feedback.wasCorrect);
@@ -109,18 +128,22 @@ export class AnswerEngine {
       if (behavior.shouldAutoSubmit) {
         logger.warn('Question did not change after submission');
         this.options.state.setError('Question did not advance');
+        this.updateActivity('Question did not advance, waiting...');
       } else {
         logger.debug('Awaiting manual submission or navigation');
+        this.updateActivity('Waiting for you to submit or move forward...');
       }
       return;
     }
 
     this.options.state.setError(undefined);
+    this.updateActivity('Waiting for the next question...');
   }
 
   private async generateAnswer(context: MathspaceQuestionContext): Promise<MathspaceAnswer> {
     const prompt = this.composePrompt(context);
     logger.info('Requesting GPT answer', { type: context.type });
+    this.updateActivity('Generating answer with GPT...');
     const attempts = 3;
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {

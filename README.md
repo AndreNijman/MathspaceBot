@@ -4,11 +4,8 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
 
 ## Features
 - Opens Mathspace in Chromium and lets you log in manually.
-- Injects a draggable overlay with status, counters, and mode selection.
-- Three answer modes:
-  - **Instant** – auto-fill and submit immediately.
-  - **Semi** – fill answers but wait for the user to submit.
-  - **Delayed** – auto-submit after a human-like randomized delay.
+- Injects a draggable overlay with status, counters, and a live “activity” ticker showing what the bot is doing.
+- Semi-automation workflow (Instant/Delayed are temporarily disabled so only Semi mode is active).
 - Captures question context (stem, options, prior steps, feedback) and crafts GPT prompts.
 - Retries OpenAI calls with exponential backoff and caches correct answers locally during the session.
 - Tracks correctness/retries and surfaces errors directly in the overlay.
@@ -38,11 +35,10 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
 ## Usage Flow
 1. A Chromium window opens on the Mathspace login page.
 2. Log in manually, navigate to the task you want to automate, and keep the overlay handy in the corner (it loads right on the login screen).
-3. Press **Start** in the overlay when you actually want the bot to work. Nothing runs automatically, even when Mathspace loads a task. Use the overlay buttons or keyboard shortcuts:
+3. Press **Start** in the overlay when you actually want the bot to work (the overlay also shows the current activity at all times). Nothing runs automatically, even when Mathspace loads a task. Use the overlay buttons or keyboard shortcuts:
    - `Alt+S` – toggle start/stop.
    - `Alt+R` – refresh question context.
-   - `Alt+1/2/3` – Instant/Semi/Delayed modes.
-4. When running, the bot reads the current question, calls GPT, and fills the answer according to the selected mode. Errors or feedback are shown in the overlay.
+4. When running, the bot reads the current question, calls GPT, and fills the answer (in Semi mode it waits for you to submit). Errors or feedback are shown in the overlay.
 
 ## Project Structure
 ```

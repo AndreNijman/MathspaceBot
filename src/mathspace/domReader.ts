@@ -3,15 +3,14 @@ import { logger } from '../util/log.js';
 import { MathspaceFeedback, MathspaceQuestionContext, MathspaceQuestionType } from './types.js';
 
 const SELECTORS = {
-  taskRoot: '[data-testid="workspace-root"], .workspace-container',
-  questionStem: '[data-testid="question"]',
-  answerInput: 'input[data-testid="answer-input"], .answer-input input',
-  multipleChoiceOption: '[data-testid="choice"], .multiple-choice-option',
+  taskRoot: '#react-app-hook',
+  questionHeader: '[class*="ProblemHeaderRightColumn"]',
+  subproblem: 'div[class^="subproblem"]',
+  optionCandidates: ['[role="radiogroup"] [role="radio"]', 'button[role="radio"]', '[class*="multipleChoiceOption"]'],
   workingStep: '[data-testid="working-step"]',
-  feedbackBanner: '[data-testid="feedback"], .feedback-message',
-  correctionText: '[data-testid="correct-answer"], .correct-answer',
-  nextQuestionButton: '[data-testid="next-btn"], button.next-question'
-};
+  feedbackBanner: '[data-testid="feedback"], .feedback-message, [class*="feedbackMessage"]',
+  correctionText: '[data-testid="correct-answer"], .correct-answer, [class*="correctAnswer"]'
+} as const;
 
 export class MathspaceDomReader {
   constructor(private readonly page: Page) {}
@@ -29,15 +28,35 @@ export class MathspaceDomReader {
 
   async readQuestionContext(): Promise<MathspaceQuestionContext | null> {
     const context = await this.page.evaluate((selectors) => {
-      const stem = document.querySelector(selectors.questionStem);
-      if (!stem) {
+      const headerNode = document.querySelector<HTMLElement>(selectors.questionHeader);
+      const headerText = headerNode?.textContent?.trim() || '';
+
+      const subproblemNodes = Array.from(document.querySelectorAll<HTMLElement>(selectors.subproblem));
+      const subproblemText = subproblemNodes
+        .map((node) => {
+          const clone = node.cloneNode(true) as HTMLElement;
+          clone.querySelectorAll('button, svg').forEach((element) => element.remove());
+          return clone.textContent?.replace(/\b(Help|Lesson|Calculator)\b/gi, '').trim();
+        })
+        .filter(Boolean)
+        .join('\n');
+
+      const questionText = [headerText, subproblemText].filter(Boolean).join('\n\n').trim();
+      if (!questionText) {
         return null;
       }
-      const questionText = stem.textContent?.trim() || '';
-      const optionNodes = Array.from(document.querySelectorAll(selectors.multipleChoiceOption));
-      const options = optionNodes
-        .map((node) => (node.textContent || '').trim())
-        .filter(Boolean);
+
+      const optionsSet = new Set<string>();
+      selectors.optionCandidates.forEach((selector) => {
+        document.querySelectorAll(selector).forEach((node) => {
+          const text = node.textContent?.trim();
+          if (text) {
+            optionsSet.add(text);
+          }
+        });
+      });
+      const options = Array.from(optionsSet);
+
       const previousSteps = Array.from(document.querySelectorAll(selectors.workingStep))
         .map((node) => (node.textContent || '').trim())
         .filter(Boolean);
@@ -99,8 +118,11 @@ export class MathspaceDomReader {
           selectors,
           previous
         ) => {
-          const stem = document.querySelector(selectors.questionStem);
-          const text = stem?.textContent?.trim() || '';
+          const header = document.querySelector(selectors.questionHeader);
+          const subproblem = document.querySelector(selectors.subproblem);
+          const headerText = header?.textContent?.trim() || '';
+          const subText = subproblem?.textContent?.trim() || '';
+          const text = [headerText, subText].filter(Boolean).join('\n').trim();
           return text && text !== previous;
         },
         { timeout },

@@ -9,6 +9,7 @@ export interface BotStateSnapshot {
   correct: number;
   retries: number;
   lastError?: string;
+  activity: string;
 }
 
 export interface QuestionMemoryEntry {
@@ -25,7 +26,8 @@ export class BotState {
     answered: 0,
     correct: 0,
     retries: 0,
-    lastError: undefined
+    lastError: undefined,
+    activity: 'Idle'
   };
 
   private readonly listeners = new Set<Listener>();
@@ -53,6 +55,11 @@ export class BotState {
 
   setError(message?: string): void {
     this.snapshotState.lastError = message;
+    this.emit();
+  }
+
+  setActivity(message: string): void {
+    this.snapshotState.activity = message;
     this.emit();
   }
 

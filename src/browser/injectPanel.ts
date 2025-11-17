@@ -2,11 +2,7 @@ import { Page } from 'puppeteer';
 import { BotStateSnapshot } from '../state/state.js';
 import { logger } from '../util/log.js';
 
-type PanelCommandPayload =
-  | { type: 'start' }
-  | { type: 'stop' }
-  | { type: 'refresh' }
-  | { type: 'mode'; mode: 'instant' | 'semi' | 'delayed' };
+type PanelCommandPayload = { type: 'start' } | { type: 'stop' } | { type: 'refresh' };
 
 interface PanelBridgeWindow extends Window {
   mathspaceBotPanel?: {
@@ -72,6 +68,11 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
     countersEl.style.fontSize = '13px';
     countersEl.style.whiteSpace = 'pre-line';
 
+    const activityEl = document.createElement('div');
+    activityEl.style.marginTop = '6px';
+    activityEl.style.fontSize = '12px';
+    activityEl.style.opacity = '0.85';
+
     const buttonsRow = document.createElement('div');
     buttonsRow.style.display = 'flex';
     buttonsRow.style.gap = '4px';
@@ -105,45 +106,9 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
     });
     refreshBtn.addEventListener('click', () => triggerCommand({ type: 'refresh' }));
 
-    const modeRow = document.createElement('div');
-    modeRow.style.display = 'flex';
-    modeRow.style.gap = '4px';
-    modeRow.style.marginTop = '8px';
-
-    const modes: Array<{ key: 'instant' | 'semi' | 'delayed'; label: string }> = [
-      { key: 'instant', label: 'Instant' },
-      { key: 'semi', label: 'Semi' },
-      { key: 'delayed', label: 'Delayed' }
-    ];
-
-    modes.forEach(({ key, label }) => {
-      const btn = document.createElement('button');
-      btn.textContent = label;
-      btn.dataset.mode = key;
-      btn.style.flex = '1';
-      btn.style.padding = '6px';
-      btn.style.border = '1px solid #52525b';
-      btn.style.borderRadius = '4px';
-      btn.style.background = 'transparent';
-      btn.style.color = '#fff';
-      btn.style.fontSize = '12px';
-      btn.style.cursor = 'pointer';
-      btn.addEventListener('click', () => triggerCommand({ type: 'mode', mode: key }));
-      modeRow.appendChild(btn);
-    });
-
-    panel.append(statusEl, countersEl, buttonsRow, modeRow);
+    panel.append(statusEl, countersEl, activityEl, buttonsRow);
     buttonsRow.append(toggleBtn, refreshBtn);
     document.body?.appendChild(panel);
-
-    const setModeButtonState = (mode: string): void => {
-      modeRow.querySelectorAll('button').forEach((btn) => {
-        if (btn instanceof HTMLButtonElement) {
-          const active = btn.dataset.mode === mode;
-          btn.style.background = active ? '#2563eb' : 'transparent';
-        }
-      });
-    };
 
     let currentState = initialState;
 
@@ -155,15 +120,6 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
           break;
         case 's':
           triggerCommand({ type: currentState.isRunning ? 'stop' : 'start' });
-          break;
-        case '1':
-          triggerCommand({ type: 'mode', mode: 'instant' });
-          break;
-        case '2':
-          triggerCommand({ type: 'mode', mode: 'semi' });
-          break;
-        case '3':
-          triggerCommand({ type: 'mode', mode: 'delayed' });
           break;
         default:
           return;
@@ -177,7 +133,7 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
       const statusLabel = state.isRunning ? 'Running' : 'Idle';
       statusEl.textContent = `Status: ${statusLabel} | Mode: ${modeLabel}`;
       countersEl.textContent = `Answered ${state.answered} • Correct ${state.correct} • Retries ${state.retries}`;
-      setModeButtonState(state.mode);
+      activityEl.textContent = `Activity: ${state.activity || 'Idle'}`;
       if (state.lastError) {
         countersEl.textContent += `\nError: ${state.lastError}`;
       }

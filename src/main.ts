@@ -24,8 +24,7 @@ async function main(): Promise<void> {
   await panelApi.init({
     onStart: () => void engine.start(),
     onStop: () => void engine.stop(),
-    onRefresh: () => void engine.refreshQuestion(),
-    onModeChange: (mode) => state.setMode(mode)
+    onRefresh: () => void engine.refreshQuestion()
   });
 
   state.subscribe((snapshot) => {

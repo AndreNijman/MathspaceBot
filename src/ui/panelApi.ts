@@ -1,18 +1,13 @@
 import { Page } from 'puppeteer';
-import { AnswerMode, BotStateSnapshot } from '../state/state.js';
+import { BotStateSnapshot } from '../state/state.js';
 import { logger } from '../util/log.js';
 
-export type PanelCommand =
-  | { type: 'start' }
-  | { type: 'stop' }
-  | { type: 'refresh' }
-  | { type: 'mode'; mode: AnswerMode };
+export type PanelCommand = { type: 'start' } | { type: 'stop' } | { type: 'refresh' };
 
 export interface PanelHandlers {
   onStart: () => void;
   onStop: () => void;
   onRefresh: () => void;
-  onModeChange: (mode: AnswerMode) => void;
 }
 
 export class PanelApi {
@@ -36,9 +31,6 @@ export class PanelApi {
           break;
         case 'refresh':
           handlers.onRefresh();
-          break;
-        case 'mode':
-          handlers.onModeChange(command.mode);
           break;
         default:
           break;
