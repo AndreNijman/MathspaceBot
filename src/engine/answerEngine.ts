@@ -56,9 +56,9 @@ export class AnswerEngine {
         logger.error('Processing question failed', { message });
         this.options.state.setError(message);
         this.options.state.recordRetry();
-        await this.options.page.waitForTimeout(2000);
+        await this.sleep(2000);
       }
-      await this.options.page.waitForTimeout(250);
+      await this.sleep(250);
     }
     this.loopInFlight = false;
   }
@@ -66,7 +66,7 @@ export class AnswerEngine {
   private async processQuestion(): Promise<void> {
     const context = await this.options.reader.readQuestionContext();
     if (!context) {
-      await this.options.page.waitForTimeout(750);
+      await this.sleep(750);
       return;
     }
 
@@ -78,7 +78,7 @@ export class AnswerEngine {
     if (behavior.shouldAutoSubmit) {
       const delay = randomDelay(behavior);
       if (delay > 0) {
-        await this.options.page.waitForTimeout(delay);
+        await this.sleep(delay);
       }
       await this.options.writer.submit();
     }

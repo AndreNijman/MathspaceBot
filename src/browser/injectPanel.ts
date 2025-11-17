@@ -158,11 +158,12 @@ const PANEL_SCRIPT = `(() => {
       panelState = state;
       const modeLabel = state.mode.charAt(0).toUpperCase() + state.mode.slice(1);
       const statusLabel = state.isRunning ? 'Running' : 'Idle';
-      statusEl.textContent = `Status: ${statusLabel} | Mode: ${modeLabel}`;
-      countersEl.textContent = `Answered ${state.answered} • Correct ${state.correct} • Retries ${state.retries}`;
+      statusEl.textContent = 'Status: ' + statusLabel + ' | Mode: ' + modeLabel;
+      countersEl.textContent =
+        'Answered ' + state.answered + ' • Correct ' + state.correct + ' • Retries ' + state.retries;
       setModeButtonState(state.mode);
       if (state.lastError) {
-        countersEl.textContent += `\nError: ${state.lastError}`;
+        countersEl.textContent += '\nError: ' + state.lastError;
       }
       toggleBtn.textContent = state.isRunning ? 'Stop' : 'Start';
       toggleBtn.style.background = state.isRunning ? '#ff5d5d' : '#3f77ff';
