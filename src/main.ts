@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     void panelApi.updatePanel(snapshot);
   });
 
-  await reader.ensureInsideTask();
+  await page.waitForSelector('body', { timeout: 15000 }).catch(() => undefined);
   await injectPanel(page, state.snapshot());
 
   process.on('SIGINT', async () => {

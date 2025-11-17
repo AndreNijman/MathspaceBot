@@ -11,7 +11,8 @@ const MATHSPACE_URL = 'https://mathspace.co/accounts/login';
 export async function bootstrapBrowser(): Promise<BrowserSession> {
   const browser = await puppeteer.launch({
     headless: false,
-    args: ['--window-size=1280,800']
+    defaultViewport: null,
+    args: ['--start-maximized']
   });
 
   const page = await browser.newPage();

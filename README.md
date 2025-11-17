@@ -37,8 +37,8 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
 
 ## Usage Flow
 1. A Chromium window opens on the Mathspace login page.
-2. Log in manually, navigate to the task you want to automate, and wait for the overlay to appear once the workspace loads.
-3. Use the overlay buttons or keyboard shortcuts:
+2. Log in manually, navigate to the task you want to automate, and keep the overlay handy in the corner (it loads right on the login screen).
+3. Press **Start** in the overlay when you actually want the bot to work. Nothing runs automatically, even when Mathspace loads a task. Use the overlay buttons or keyboard shortcuts:
    - `Alt+S` – toggle start/stop.
    - `Alt+R` – refresh question context.
    - `Alt+1/2/3` – Instant/Semi/Delayed modes.
