@@ -47,27 +47,17 @@ export class OpenAIClient {
     const payload = (await response.json()) as {
       choices: Array<{
         message?: {
-          content?: string | Array<{ type?: string; text?: string; content?: string }>;
+          content?:
+            | string
+            | Array<{ type?: string; text?: string; content?: string | Array<{ text?: string }> }>
+            | { type?: string; text?: string; content?: string | Array<{ text?: string }> };
         };
       }>;
       usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
     };
 
     const rawContent = payload.choices[0]?.message?.content;
-    let textResult: string | null = null;
-    if (typeof rawContent === 'string') {
-      textResult = rawContent;
-    } else if (Array.isArray(rawContent)) {
-      textResult = rawContent
-        .map((entry) => {
-          if (!entry) return '';
-          if (typeof entry === 'string') return entry;
-          return entry.text || entry.content || '';
-        })
-        .join('')
-        .trim();
-    }
-
+    const textResult = this.extractTextContent(rawContent);
     if (!textResult) {
       throw new Error('OpenAI response missing content');
     }
@@ -77,5 +67,48 @@ export class OpenAIClient {
       completionTokens: payload.usage?.completion_tokens,
       totalTokens: payload.usage?.total_tokens
     };
+  }
+
+  private extractTextContent(content: unknown): string | null {
+    if (typeof content === 'string') {
+      return content;
+    }
+    if (Array.isArray(content)) {
+      const joined = content
+        .map((entry) => {
+          if (!entry) {
+            return '';
+          }
+          if (typeof entry === 'string') {
+            return entry;
+          }
+          if (typeof entry === 'object') {
+            const maybeObject = entry as { text?: string; content?: unknown };
+            return (
+              maybeObject.text ||
+              (typeof maybeObject.content === 'string'
+                ? maybeObject.content
+                : this.extractTextContent(maybeObject.content)) ||
+              ''
+            );
+          }
+          return '';
+        })
+        .join('')
+        .trim();
+      return joined || null;
+    }
+    if (content && typeof content === 'object') {
+      const data = content as { text?: string; content?: unknown };
+      return (
+        data.text ||
+        (typeof data.content === 'string'
+          ? data.content
+          : data.content
+          ? this.extractTextContent(data.content)
+          : null)
+      );
+    }
+    return null;
   }
 }
