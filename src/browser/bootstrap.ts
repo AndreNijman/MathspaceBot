@@ -6,7 +6,7 @@ export interface BrowserSession {
   page: Page;
 }
 
-const MATHSPACE_URL = 'https://mathspace.co/login';
+const MATHSPACE_URL = 'https://mathspace.co/accounts/login';
 
 export async function bootstrapBrowser(): Promise<BrowserSession> {
   const browser = await puppeteer.launch({
