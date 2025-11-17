@@ -14,7 +14,7 @@ async function main(): Promise<void> {
   const { browser, page } = await bootstrapBrowser();
   registerPageEvents(page);
 
-  const state = new BotState();
+  const state = new BotState(config.openAiTokenCostAudPer1K);
   const panelApi = new PanelApi(page);
   const reader = new MathspaceDomReader(page);
   const writer = new MathspaceDomWriter(page);

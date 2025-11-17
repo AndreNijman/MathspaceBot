@@ -10,6 +10,10 @@ export interface BotStateSnapshot {
   retries: number;
   lastError?: string;
   activity: string;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  audSpent: number;
 }
 
 export interface QuestionMemoryEntry {
@@ -19,6 +23,12 @@ export interface QuestionMemoryEntry {
 
 type Listener = (snapshot: BotStateSnapshot) => void;
 
+export interface TokenUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+}
+
 export class BotState {
   private snapshotState: BotStateSnapshot = {
     isRunning: false,
@@ -27,11 +37,17 @@ export class BotState {
     correct: 0,
     retries: 0,
     lastError: undefined,
-    activity: 'Idle'
+    activity: 'Idle',
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+    audSpent: 0
   };
 
   private readonly listeners = new Set<Listener>();
   private readonly memory = new Map<string, QuestionMemoryEntry>();
+
+  constructor(private readonly tokenCostAudPer1K = 0.09) {}
 
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -60,6 +76,21 @@ export class BotState {
 
   setActivity(message: string): void {
     this.snapshotState.activity = message;
+    this.emit();
+  }
+
+  recordTokenUsage(usage?: TokenUsage): void {
+    if (!usage) {
+      return;
+    }
+    const prompt = usage.promptTokens ?? 0;
+    const completion = usage.completionTokens ?? 0;
+    const total = usage.totalTokens ?? prompt + completion;
+    this.snapshotState.promptTokens += prompt;
+    this.snapshotState.completionTokens += completion;
+    this.snapshotState.totalTokens += total;
+    const audIncrement = (total / 1000) * this.tokenCostAudPer1K;
+    this.snapshotState.audSpent += audIncrement;
     this.emit();
   }
 

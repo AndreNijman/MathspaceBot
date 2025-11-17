@@ -9,6 +9,13 @@ export interface ChatCompletionOptions {
   useDefaultTemperature?: boolean;
 }
 
+export interface ChatCompletionResult {
+  content: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+}
+
 export class OpenAIClient {
   private readonly apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -17,7 +24,7 @@ export class OpenAIClient {
     private readonly model: string
   ) {}
 
-  async createChatCompletion(messages: ChatMessage[], options: ChatCompletionOptions = {}): Promise<string> {
+  async createChatCompletion(messages: ChatMessage[], options: ChatCompletionOptions = {}): Promise<ChatCompletionResult> {
     const response = await fetch(this.apiUrl, {
       method: 'POST',
       headers: {
@@ -39,12 +46,18 @@ export class OpenAIClient {
 
     const payload = (await response.json()) as {
       choices: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
     };
 
     const content = payload.choices[0]?.message?.content;
     if (!content) {
       throw new Error('OpenAI response missing content');
     }
-    return content.trim();
+    return {
+      content: content.trim(),
+      promptTokens: payload.usage?.prompt_tokens,
+      completionTokens: payload.usage?.completion_tokens,
+      totalTokens: payload.usage?.total_tokens
+    };
   }
 }

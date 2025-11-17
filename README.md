@@ -5,6 +5,7 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
 ## Features
 - Opens Mathspace in Chromium and lets you log in manually.
 - Injects a draggable overlay with status, counters, and a live “activity” ticker showing what the bot is doing.
+- Tracks OpenAI usage (tokens + estimated AUD spend) and surfaces it in the overlay.
 - Semi-automation workflow (Instant/Delayed are temporarily disabled so only Semi mode is active).
 - Captures question context (stem, options, prior steps, feedback) and crafts GPT prompts.
 - Retries OpenAI calls with exponential backoff and caches correct answers locally during the session.
@@ -25,6 +26,7 @@ Automates Mathspace question workflows with Puppeteer while delegating answer ge
    ```env
    OPENAI_API_KEY=sk-...
    OPENAI_MODEL=gpt-5      # optional override
+   OPENAI_AUD_PER_1K_TOKENS=0.09   # optional override for cost tracking
    ```
 3. Build and run:
    ```bash

@@ -154,10 +154,15 @@ export class AnswerEngine {
           ],
           { useDefaultTemperature: true }
         );
-        const parsed = this.parseModelResponse(context, response);
+        const parsed = this.parseModelResponse(context, response.content);
         if (!parsed) {
           throw new Error('Unable to parse OpenAI response');
         }
+        this.options.state.recordTokenUsage({
+          promptTokens: response.promptTokens,
+          completionTokens: response.completionTokens,
+          totalTokens: response.totalTokens
+        });
         return { raw: parsed, confidence: 0.6 };
       } catch (error) {
         logger.warn('OpenAI call failed', {

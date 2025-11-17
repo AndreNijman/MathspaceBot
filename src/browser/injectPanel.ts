@@ -73,6 +73,11 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
     activityEl.style.fontSize = '12px';
     activityEl.style.opacity = '0.85';
 
+    const tokensEl = document.createElement('div');
+    tokensEl.style.marginTop = '6px';
+    tokensEl.style.fontSize = '12px';
+    tokensEl.style.whiteSpace = 'pre-line';
+
     const buttonsRow = document.createElement('div');
     buttonsRow.style.display = 'flex';
     buttonsRow.style.gap = '4px';
@@ -106,7 +111,7 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
     });
     refreshBtn.addEventListener('click', () => triggerCommand({ type: 'refresh' }));
 
-    panel.append(statusEl, countersEl, activityEl, buttonsRow);
+    panel.append(statusEl, countersEl, activityEl, tokensEl, buttonsRow);
     buttonsRow.append(toggleBtn, refreshBtn);
     document.body?.appendChild(panel);
 
@@ -134,6 +139,8 @@ const PANEL_BOOTSTRAP = (initialState: BotStateSnapshot): void => {
       statusEl.textContent = `Status: ${statusLabel} | Mode: ${modeLabel}`;
       countersEl.textContent = `Answered ${state.answered} • Correct ${state.correct} • Retries ${state.retries}`;
       activityEl.textContent = `Activity: ${state.activity || 'Idle'}`;
+      const audLabel = state.audSpent ? ` • A$${state.audSpent.toFixed(4)}` : '';
+      tokensEl.textContent = `Tokens → Prompt ${state.promptTokens} • Completion ${state.completionTokens}\nTotal ${state.totalTokens}${audLabel}`;
       if (state.lastError) {
         countersEl.textContent += `\nError: ${state.lastError}`;
       }
