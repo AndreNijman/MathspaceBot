@@ -45,16 +45,34 @@ export class OpenAIClient {
     }
 
     const payload = (await response.json()) as {
-      choices: Array<{ message?: { content?: string } }>;
+      choices: Array<{
+        message?: {
+          content?: string | Array<{ type?: string; text?: string; content?: string }>;
+        };
+      }>;
       usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
     };
 
-    const content = payload.choices[0]?.message?.content;
-    if (!content) {
+    const rawContent = payload.choices[0]?.message?.content;
+    let textResult: string | null = null;
+    if (typeof rawContent === 'string') {
+      textResult = rawContent;
+    } else if (Array.isArray(rawContent)) {
+      textResult = rawContent
+        .map((entry) => {
+          if (!entry) return '';
+          if (typeof entry === 'string') return entry;
+          return entry.text || entry.content || '';
+        })
+        .join('')
+        .trim();
+    }
+
+    if (!textResult) {
       throw new Error('OpenAI response missing content');
     }
     return {
-      content: content.trim(),
+      content: textResult.trim(),
       promptTokens: payload.usage?.prompt_tokens,
       completionTokens: payload.usage?.completion_tokens,
       totalTokens: payload.usage?.total_tokens
