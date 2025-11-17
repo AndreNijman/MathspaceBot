@@ -6,6 +6,7 @@ export interface ChatMessage {
 export interface ChatCompletionOptions {
   temperature?: number;
   maxTokens?: number;
+  useDefaultTemperature?: boolean;
 }
 
 export class OpenAIClient {
@@ -26,7 +27,7 @@ export class OpenAIClient {
       body: JSON.stringify({
         model: this.model,
         messages,
-        temperature: options.temperature ?? 0.2,
+        ...(options.useDefaultTemperature ? {} : { temperature: options.temperature ?? 0.2 }),
         max_completion_tokens: options.maxTokens ?? 512
       })
     });

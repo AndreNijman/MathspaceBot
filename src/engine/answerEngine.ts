@@ -147,10 +147,13 @@ export class AnswerEngine {
     const attempts = 3;
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {
-        const response = await this.options.openai.createChatCompletion([
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ]);
+        const response = await this.options.openai.createChatCompletion(
+          [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ],
+          { useDefaultTemperature: true }
+        );
         const parsed = this.parseModelResponse(context, response);
         if (!parsed) {
           throw new Error('Unable to parse OpenAI response');
